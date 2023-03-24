@@ -1,0 +1,207 @@
+#Data preprocessing and integration#### ------------
+
+library(dplyr)
+library(Seurat)
+library(patchwork)
+library(ggplot2)
+
+#Loading the samples from FT_Sc1, received in January 2023
+
+Control1 <- Read10X("data/filtered_feature_bc_matrix_Control1/")
+Control2 <- Read10X("data/filtered_feature_bc_matrix_Control2/") 
+Sc1 <- Read10X("data/filtered_feature_bc_matrix_Sc1/")
+Sc2 <- Read10X("data/filtered_feature_bc_matrix_Sc2/")
+Sc_R7A1 <- Read10X("data/filtered_feature_bc_matrix_Sc_R7A1/")
+Sc_R7A2 <- Read10X("data/filtered_feature_bc_matrix_Sc_R7A2/")
+
+####Quality control and filtering ---------------------------------
+
+######################### Control1 #############################
+
+#creating the seurat object
+Control1_seurat <- CreateSeuratObject(counts = Control1, project = "Control1_seurat", min.cells = 3, min.features = 200)
+
+#Adding metadata
+Control1_seurat <- AddMetaData(object = Control1_seurat, col.name = "Sample", metadata = "Gifu_control")
+Control1_seurat <- AddMetaData(object = Control1_seurat, col.name = "Genotype", metadata = "Gifu")
+Control1_seurat <- AddMetaData(object = Control1_seurat, col.name = "Inoculation", metadata = "Mock")
+
+#Finding the percent of mt and chloroplast genes
+Control1_seurat[["percent.mt"]] <- PercentageFeatureSet(Control1_seurat, pattern = "LotjaGiM1v")
+Control1_seurat[["percent.chloroplast"]] <- PercentageFeatureSet(Control1_seurat, pattern = "LotjaGiC1v")
+VlnPlot(Control1_seurat, features = c("nFeature_RNA", "nCount_RNA", "percent.mt", "percent.chloroplast"), ncol = 4)
+dim(Control1_seurat)
+
+FeatureScatter(Control1_seurat, feature1 = "nCount_RNA", feature2 = "percent.mt") + FeatureScatter(Control1_seurat, feature1 = "nCount_RNA", feature2 = "percent.chloroplast")
+
+FeatureScatter(Control1_seurat, feature1 = "nCount_RNA", feature2 = "nFeature_RNA") +
+  geom_smooth(method ="lm")
+
+#filtering the seurat object
+Control1_seurat_filt <- subset(Control1_seurat, subset = nCount_RNA > 500 & nCount_RNA < 20000 & nFeature_RNA > 200 &  nFeature_RNA < 7500 & percent.mt < 10 & percent.chloroplast < 5)
+VlnPlot(Gifu_control_1_seurat_filt, features = c("nFeature_RNA", "nCount_RNA", "percent.mt", "percent.chloroplast"), ncol = 4)
+FeatureScatter(Control1_seurat_filt, feature1 = "nCount_RNA", feature2 = "nFeature_RNA") +
+  geom_smooth(method ="lm")
+
+dim(Control1_seurat_filt)
+
+#Saving the object as RDS
+saveRDS(Control1_seurat_filt, "Control1_seurat_filt.rds")
+
+######################### Control2 #############################
+
+#creating the seurat object
+Control2_seurat <- CreateSeuratObject(counts = Control2, project = "Control2_seurat", min.cells = 3, min.features = 200)
+
+#Adding metadata
+Control2_seurat <- AddMetaData(object = Control2_seurat, col.name = "Sample", metadata = "Gifu_control")
+Control2_seurat <- AddMetaData(object = Control2_seurat, col.name = "Genotype", metadata = "Gifu")
+Control2_seurat <- AddMetaData(object = Control2_seurat, col.name = "Inoculation", metadata = "Mock")
+
+#Finding the percent of mt and chloroplast genes
+Control2_seurat[["percent.mt"]] <- PercentageFeatureSet(Control2_seurat, pattern = "LotjaGiM1v")
+Control2_seurat[["percent.chloroplast"]] <- PercentageFeatureSet(Control2_seurat, pattern = "LotjaGiC1v")
+VlnPlot(Control2_seurat, features = c("nFeature_RNA", "nCount_RNA", "percent.mt", "percent.chloroplast"), ncol = 4)
+dim(Control2_seurat)
+
+FeatureScatter(Control2_seurat, feature1 = "nCount_RNA", feature2 = "percent.mt") + FeatureScatter(Control2_seurat, feature1 = "nCount_RNA", feature2 = "percent.chloroplast")
+
+FeatureScatter(Control2_seurat, feature1 = "nCount_RNA", feature2 = "nFeature_RNA") +
+  geom_smooth(method ="lm")
+
+#filtering the seurat object
+Control2_seurat_filt <- subset(Control2_seurat, subset = nCount_RNA > 500 & nCount_RNA < 20000 & nFeature_RNA > 200 &  nFeature_RNA < 7500 & percent.mt < 10 & percent.chloroplast < 5)
+VlnPlot(Control2_seurat_filt, features = c("nFeature_RNA", "nCount_RNA", "percent.mt", "percent.chloroplast"), ncol = 4)
+FeatureScatter(Control2_seurat_filt, feature1 = "nCount_RNA", feature2 = "nFeature_RNA") +
+  geom_smooth(method ="lm")
+
+dim(Control2_seurat_filt)
+
+#Saving the object as RDS
+saveRDS(Control2_seurat_filt, "Control2_seurat_filt.rds")
+
+######################### Sc1 #############################
+
+#creating the seurat object
+Sc1_seurat <- CreateSeuratObject(counts =Sc1, project = "Sc1_seurat", min.cells = 3, min.features = 200)
+
+#Adding metadata
+Sc1_seurat <- AddMetaData(object = Sc1_seurat, col.name = "Sample", metadata = "Gifu_Sc")
+Sc1_seurat <- AddMetaData(object = Sc1_seurat, col.name = "Genotype", metadata = "Gifu")
+Sc1_seurat <- AddMetaData(object = Sc1_seurat, col.name = "Inoculation", metadata = "Sc")
+
+#Finding the percent of mt and chloroplast genes
+Sc1_seurat[["percent.mt"]] <- PercentageFeatureSet(Sc1_seurat, pattern = "LotjaGiM1v")
+Sc1_seurat[["percent.chloroplast"]] <- PercentageFeatureSet(Sc1_seurat, pattern = "LotjaGiC1v")
+VlnPlot(Sc1_seurat, features = c("nFeature_RNA", "nCount_RNA", "percent.mt", "percent.chloroplast"), ncol = 4)
+dim(Sc1_seurat)
+
+FeatureScatter(Sc1_seurat, feature1 = "nCount_RNA", feature2 = "percent.mt") + FeatureScatter(Sc1_seurat, feature1 = "nCount_RNA", feature2 = "percent.chloroplast")
+
+FeatureScatter(Sc1_seurat, feature1 = "nCount_RNA", feature2 = "nFeature_RNA") +
+  geom_smooth(method ="lm")
+
+#filtering the seurat object
+Sc1_seurat_filt <- subset(Sc1_seurat, subset = nCount_RNA > 500 & nCount_RNA < 20000 & nFeature_RNA > 200 &  nFeature_RNA < 7500 & percent.mt < 10 & percent.chloroplast < 5)
+VlnPlot(Sc1_seurat_filt, features = c("nFeature_RNA", "nCount_RNA", "percent.mt", "percent.chloroplast"), ncol = 4)
+FeatureScatter(Sc1_seurat_filt, feature1 = "nCount_RNA", feature2 = "nFeature_RNA") +
+  geom_smooth(method ="lm")
+
+dim(Sc1_seurat_filt)
+
+#Saving the object as RDS
+saveRDS(Sc1_seurat_filt, "Sc1_seurat_filt.rds")
+
+######################### Sc2 #############################
+
+#creating the seurat object
+Sc2_seurat <- CreateSeuratObject(counts = Sc2, project = "Sc2_seurat", min.cells = 3, min.features = 200)
+
+#Adding metadata
+Sc2_seurat <- AddMetaData(object = Sc2_seurat, col.name = "Sample", metadata = "Gifu_Sc")
+Sc2_seurat <- AddMetaData(object = Sc2_seurat, col.name = "Genotype", metadata = "Gifu")
+Sc2_seurat <- AddMetaData(object = Sc2_seurat, col.name = "Inoculation", metadata = "Sc")
+
+#Finding the percent of mt and chloroplast genes
+Sc2_seurat[["percent.mt"]] <- PercentageFeatureSet(Sc2_seurat, pattern = "LotjaGiM1v")
+Sc2_seurat[["percent.chloroplast"]] <- PercentageFeatureSet(Sc2_seurat, pattern = "LotjaGiC1v")
+VlnPlot(Sc2_seurat, features = c("nFeature_RNA", "nCount_RNA", "percent.mt", "percent.chloroplast"), ncol = 4)
+dim(Sc2_seurat)
+
+FeatureScatter(Sc2_seurat, feature1 = "nCount_RNA", feature2 = "percent.mt") + FeatureScatter(Sc2_seurat, feature1 = "nCount_RNA", feature2 = "percent.chloroplast")
+
+FeatureScatter(Sc2_seurat, feature1 = "nCount_RNA", feature2 = "nFeature_RNA") +
+  geom_smooth(method ="lm")
+
+#filtering the seurat object
+Sc2_seurat_filt <- subset(Sc2_seurat, subset = nCount_RNA > 500 & nCount_RNA < 20000 & nFeature_RNA > 200 &  nFeature_RNA < 7500 & percent.mt < 10 & percent.chloroplast < 5)
+VlnPlot(Sc2_seurat_filt, features = c("nFeature_RNA", "nCount_RNA", "percent.mt", "percent.chloroplast"), ncol = 4)
+FeatureScatter(Sc2_seurat_filt, feature1 = "nCount_RNA", feature2 = "nFeature_RNA") +
+  geom_smooth(method ="lm")
+
+dim(Sc2_seurat_filt)
+
+#Saving the object as RDS
+saveRDS(Sc2_seurat_filt, "Sc2_seurat_filt.rds")
+
+######################### Sc_R7A1 #############################
+
+#creating the seurat object
+Sc_R7A1_seurat <- CreateSeuratObject(counts = Sc_R7A1, project = "Sc_R7A1_seurat", min.cells = 3, min.features = 200)
+
+#Adding metadata
+Sc_R7A1_seurat <- AddMetaData(object = Sc_R7A1_seurat, col.name = "Sample", metadata = "Gifu_Sc_R7A")
+Sc_R7A1_seurat <- AddMetaData(object = Sc_R7A1_seurat, col.name = "Genotype", metadata = "Gifu")
+Sc_R7A1_seurat <- AddMetaData(object = Sc_R7A1_seurat, col.name = "Inoculation", metadata = "Sc_R7A")
+
+#Finding the percent of mt and chloroplast genes
+Sc_R7A1_seurat[["percent.mt"]] <- PercentageFeatureSet(Sc_R7A1_seurat, pattern = "LotjaGiM1v")
+Sc_R7A1_seurat[["percent.chloroplast"]] <- PercentageFeatureSet(Sc_R7A1_seurat, pattern = "LotjaGiC1v")
+VlnPlot(Sc_R7A1_seurat, features = c("nFeature_RNA", "nCount_RNA", "percent.mt", "percent.chloroplast"), ncol = 4)
+dim(Sc_R7A1_seurat)
+
+FeatureScatter(Sc_R7A1_seurat, feature1 = "nCount_RNA", feature2 = "percent.mt") + FeatureScatter(Sc_R7A1_seurat, feature1 = "nCount_RNA", feature2 = "percent.chloroplast")
+
+FeatureScatter(Sc_R7A1_seurat, feature1 = "nCount_RNA", feature2 = "nFeature_RNA") +
+  geom_smooth(method ="lm")
+
+#filtering the seurat object
+Sc_R7A1_seurat_filt <- subset(Sc_R7A1_seurat, subset = nCount_RNA > 500 & nCount_RNA < 20000 & nFeature_RNA > 200 &  nFeature_RNA < 7500 & percent.mt < 10 & percent.chloroplast < 5)
+VlnPlot(Sc_R7A1_seurat_filt, features = c("nFeature_RNA", "nCount_RNA", "percent.mt", "percent.chloroplast"), ncol = 4)
+FeatureScatter(Sc_R7A1_seurat_filt, feature1 = "nCount_RNA", feature2 = "nFeature_RNA") +
+  geom_smooth(method ="lm")
+
+dim(Sc_R7A1_seurat_filt)
+
+#Saving the object as RDS
+saveRDS(Sc_R7A1_seurat_filt, "Sc_R7A1_seurat_filt.rds")
+
+
+######################### Sc_R7A2 #############################
+
+#creating the seurat object
+Sc_R7A2_seurat <- CreateSeuratObject(counts = Sc_R7A2, project = "Sc_R7A2_seurat", min.cells = 3, min.features = 200)
+
+#Adding metadata
+Sc_R7A2_seurat <- AddMetaData(object = Sc_R7A2_seurat, col.name = "Sample", metadata = "Gifu_Sc_R7A")
+Sc_R7A2_seurat <- AddMetaData(object = Sc_R7A2_seurat, col.name = "Genotype", metadata = "Gifu")
+Sc_R7A2_seurat <- AddMetaData(object = Sc_R7A2_seurat, col.name = "Inoculation", metadata = "Sc_R7A")
+
+#Finding the percent of mt and chloroplast genes
+Sc_R7A2_seurat[["percent.mt"]] <- PercentageFeatureSet(Sc_R7A2_seurat, pattern = "LotjaGiM1v")
+Sc_R7A2_seurat[["percent.chloroplast"]] <- PercentageFeatureSet(Sc_R7A2_seurat, pattern = "LotjaGiC1v")
+VlnPlot(Sc_R7A2_seurat, features = c("nFeature_RNA", "nCount_RNA", "percent.mt", "percent.chloroplast"), ncol = 4)
+dim(Sc_R7A2_seurat)
+
+FeatureScatter(Sc_R7A2_seurat, feature1 = "nCount_RNA", feature2 = "percent.mt") + FeatureScatter(Sc_R7A2_seurat, feature1 = "nCount_RNA", feature2 = "percent.chloroplast")
+
+FeatureScatter(Sc_R7A2_seurat, feature1 = "nCount_RNA", feature2 = "nFeature_RNA") +
+  geom_smooth(method ="lm")
+
+#filtering the seurat object
+Sc_R7A2_seurat_filt <- subset(Sc_R7A2_seurat, subset = nCount_RNA > 500 & nCount_RNA < 20000 & nFeature_RNA > 200 &  nFeature_RNA < 7500 & percent.mt < 10 & percent.chloroplast < 5)
+VlnPlot(Sc_R7A2_seurat_filt, features = c("nFeature_RNA", "nCount_RNA", "percent.mt", "percent.chloroplast"), ncol = 4)
+FeatureScatter(Sc_R7A2_seurat_filt, feature1 = "nCount_RNA", feature2 = "nFeature_RNA") +
+  geom_smooth(method ="lm")
+
+dim(Sc_R7A2_seurat_filt)
