@@ -1,0 +1,47 @@
+library(Seurat)
+
+Control1_seurat_filt <- readRDS("Seurat_filtered/Control1_seurat_filt.rds")
+Control2_seurat_filt <- readRDS("Seurat_filtered/Control2_seurat_filt.rds")
+Sc1_seurat_filt <- readRDS("Seurat_filtered/Sc1_seurat_filt.rds")
+Sc2_seurat_filt <- readRDS("Seurat_filtered/Sc2_seurat_filt.rds")
+Sc_R7A1_seurat_filt <- readRDS("Seurat_filtered/Sc_R7A1_seurat_filt.rds")
+Sc_R7A2_seurat_filt <- readRDS("Seurat_filtered/Sc_R7A2_seurat_filt.rds")
+
+
+seurat.list <- list(Control1_seurat_filt, Control2_seurat_filt, Sc1_seurat_filt, Sc2_seurat_filt, Sc_R7A1_seurat_filt, Sc_R7A2_seurat_filt) 
+
+seurat.list <- lapply(X = seurat.list, FUN = function(x) {
+  x <- SCTransform(x, vars.to.regress = c("percent.mt",  "percent.chloroplast"), method = "glmGamPoi", verbose = TRUE)
+})
+
+seurat.features <- SelectIntegrationFeatures(object.list = seurat.list, nfeatures = 3000)
+
+seurat.list <- PrepSCTIntegration(object.list = seurat.list, anchor.features = seurat.features)
+
+#Integrating using SCtransform and reference
+seurat.anchors <- FindIntegrationAnchors(object.list = seurat.list, normalization.method = "SCT", 
+                                         anchor.features = seurat.features)
+
+seurat.integrated <- IntegrateData(anchorset = seurat.anchors, normalization.method = "SCT")
+
+
+DefaultAssay(seurat.integrated) <- "integrated"
+
+seurat.integrated <- RunPCA(object = seurat.integrated, verbose = FALSE)
+
+
+#Clustering using Louvain algorithm 
+
+seurat.integrated <- FindNeighbors(object = seurat.integrated, dims = 1:50)
+
+seurat.integrated  <- FindClusters(object = seurat.integrated)
+
+
+#UMAP
+seurat.integrated <- RunUMAP(object = seurat.integrated, dims = 1:50)
+
+#########
+DefaultAssay(seurat.integrated) <- "RNA"
+seurat.integrated <- NormalizeData(seurat.integrated)
+
+saveRDS(seurat.integrated, "Sc_ScR7A_integrated.rds")
